@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Music Player</title>
+</head>
+<body>
+  <img id="albumArt" src="" width="200" height="200" />
+  <h2 id="songName">No song loaded</h2>
+
+  <div>
+    <progress id="progressBar" value="0" max="100"></progress>
+  </div>
+
+  <div>
+    <button onclick="previousTrack()">⏮ Back</button>
+    <button onclick="playPause()">⏯ Play/Pause</button>
+    <button onclick="nextTrack()">⏭ Next</button>
+    <button onclick="startMyAlbum()">Start</button>
+  </div>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script>
+    let accessToken = null;
+    let player = null;
+    let currentDeviceId=null;
+    let currentPosition = 0;
+    let currentDuration = 0;
+    let isPaused = true;
+
+    async function transferPlayback() {
+      await fetch('https://api.spotify.com/v1/me/player', {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          device_ids: [currentDeviceId],
+          play: false
+        })
+      });
+    }
+    async function startPlayback(contextUri) {
+      await fetch('https://api.spotify.com/v1/me/player/play?device_id=' + currentDeviceId, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          context_uri: contextUri
+        })
+      });
+    }
+    async function checkDevices() {
+      const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+        headers: {
+          'Authorization': 'Bearer ' + accessToken
+        }
+      });
+      const data = await response.json();
+      console.log('Devices:', data);
+    }
+    async function startMyAlbum() {
+      await transferPlayback();
+      await startPlayback("spotify:album:0oNatPfTF5GM7KnSQ2hRPG");
+    }
+    window.electronAPI.onAccessToken((token) =>{
+      accessToken = token;
+      console.log("Token received in index.html:", accessToken);
+    });
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      player = new Spotify.Player({
+        name: 'My Music Player',
+        getOAuthToken: cb => { cb(accessToken); },
+        volume: 0.5
+      });
+
+      player.addListener('ready', ({ device_id }) => {
+        console.log('Ready with Device ID', device_id);
+        currentDeviceId = device_id;
+        setTimeout(()=> {
+          console.log('device should be active now')
+        }, 3000);
+      });
+      player.addListener('player_state_changed', (state) => {
+        if (!state) return;
+
+        const track = state.track_window.current_track;
+
+        document.getElementById('songName').innerText = track.name + " - " + track.artists[0].name;
+        document.getElementById('albumArt').src = track.album.images[0].url;
+
+        currentPosition = state.position;
+        currentDuration = state.duration;
+        isPaused = state.paused;
+
+        updateProgressBar();
+      });
+
+      player.connect();
+    };
+
+    function updateProgressBar() {
+      const progressPercent = (currentPosition / currentDuration) * 100;
+      document.getElementById('progressBar').value = progressPercent;
+    }
+
+    setInterval(() => {
+      if (!isPaused) {
+        currentPosition += 1000;
+        if (currentPosition > currentDuration) {
+          currentPosition = currentDuration;
+        }
+        updateProgressBar();
+      }
+    }, 1000);
+    function playPause() {
+      if(player){
+        player.togglePlay();
+      }
+    }
+
+    function nextTrack() {
+      if(player){
+        player.nextTrack();
+      }
+    }
+
+    function previousTrack() {
+      if(player){
+        player.previousTrack();
+      }
+    }
+  </script>
+</body>
+</html>

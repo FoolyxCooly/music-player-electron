@@ -1,0 +1,28 @@
+{
+  "name": "musicplayerelectron",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder"
+  },
+  "build":{
+    "appId": "com.yourname.musicplayer",
+    "electronDownload": {
+      "version": "43.0.0+wvcus",
+      "mirror": "https://github.com/castlabs/electron-releases/releases/download/"
+    },
+    "win": {
+      "target": "dir"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "github:castlabs/electron-releases#v43.0.0+wvcus",
+    "electron-builder": "^26.15.3"
+  }
+}
