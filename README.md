@@ -1,0 +1,2 @@
+Here is an app i built with electron. I wanted to make a music player using it so i can test what i can do with it. tested using OAuth. originally was just one file that holds the electron dist file and node moduels so i
+can run it. i eventually switch back to using python and made the music player not needing a browser to play the music and have a executable app instead. This was a good way to see what i could do. 
